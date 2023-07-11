@@ -1,36 +1,109 @@
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useState, Fragment } from "react";
+import { z } from "zod";
+import { pointDistance, vectorLength } from "./math";
+
+const floatRegex = /^-?[0-9]+([.,][0-9]+)?$/;
+const floatTransform = (str: string): number => {
+  return Number(str.replace(",", "."));
+};
+
+const floatArraySchema = z.array(
+  z.string().regex(floatRegex).transform(floatTransform),
+);
+
 export default function App() {
-  const [dimensions, setDimensions] = useState<string | number>(2);
-  const [mode, setMode] = useState<string | number>("coords");
+  const [vectorStr, setVectorStr] = useState<string[]>(["0", "0"]);
+  const [startPointStr, setStartPointStr] = useState<string[]>(["0", "0"]);
+  const [endPointStr, setEndPointStr] = useState<string[]>(["0", "0"]);
+  const [mode, setMode] = useState<string>("coords");
+  const [showResult, setShowResult] = useState(false);
+
+  const vectorParseResult = floatArraySchema.safeParse(vectorStr);
+  const vector = vectorParseResult.success ? vectorParseResult.data : undefined;
+
+  const startParseResult = floatArraySchema.safeParse(startPointStr);
+  const startPoint = startParseResult.success
+    ? startParseResult.data
+    : undefined;
+
+  const endParseResult = floatArraySchema.safeParse(endPointStr);
+  const endPoint = endParseResult.success ? endParseResult.data : undefined;
+
+  let result: number | undefined = undefined;
+  if (vector && mode === "coords") {
+    result = vectorLength(vector);
+  } else if (startPoint && endPoint && mode === "points") {
+    result = pointDistance(startPoint, endPoint);
+  }
+
+  console.log(vectorStr, vector);
+
   return (
     <div className="flex justify-center p-2">
       <main className="w-[65ch]">
         <Select
           label="Розмірність вектора:"
           id="dimensions"
-          value={dimensions}
-          onChange={(e) => setDimensions(e.target.value)}
+          value={vectorStr.length}
+          onChange={(e) => {
+            setVectorStr(Array(Number(e.target.value)).fill("0"));
+            setStartPointStr(Array(Number(e.target.value)).fill("0"));
+            setEndPointStr(Array(Number(e.target.value)).fill("0"));
+            setShowResult(false);
+          }}
           options={[
-            { value: 2, text: 2 },
-            { value: 3, text: 3 },
-            { value: 4, text: 4 },
-            { value: 5, text: 5 },
-            { value: 6, text: 6 },
+            { value: "2", text: "2" },
+            { value: "3", text: "3" },
+            { value: "4", text: "4" },
+            { value: "5", text: "5" },
+            { value: "6", text: "6" },
           ]}
         />
         <Select
           label="Форма представлення вектора:"
           id="mode"
           value={mode}
-          onChange={(e) => setMode(e.target.value)}
+          onChange={(e) => {
+            setShowResult(false);
+            setMode(e.target.value);
+          }}
           options={[
             { value: "coords", text: "Координатами" },
             { value: "points", text: "Точками" },
           ]}
         />
-        {mode === "coords" && <>coords {dimensions}</>}
-        {mode === "points" && <>points {dimensions}</>}
+        {mode === "coords" && (
+          <VectorInput
+            value={vectorStr}
+            setValue={(newValue) => {
+              setShowResult(false);
+              setVectorStr(newValue);
+            }}
+          />
+        )}
+        {mode === "points" && (
+          <>
+            <VectorInput
+              value={startPointStr}
+              setValue={(newValue) => {
+                setShowResult(false);
+                setStartPointStr(newValue);
+              }}
+            />
+            <VectorInput
+              value={endPointStr}
+              setValue={(newValue) => {
+                setShowResult(false);
+                setEndPointStr(newValue);
+              }}
+            />
+          </>
+        )}
+        <button onClick={() => setShowResult(true)}>Порахувати</button>
+        <br />
+        {showResult && result !== undefined && <>{result}</>}
+        {showResult && result === undefined && <>invalid data</>}
       </main>
     </div>
   );
@@ -64,6 +137,39 @@ function Select({
           </option>
         ))}
       </select>
+    </fieldset>
+  );
+}
+
+function VectorInput({
+  value,
+  setValue,
+  startLabel,
+  endLabel,
+  separator,
+}: {
+  value: string[];
+  setValue: (newValue: string[]) => void;
+  startLabel?: ReactNode;
+  endLabel?: ReactNode;
+  separator?: ReactNode;
+}) {
+  return (
+    <fieldset>
+      {startLabel}
+      {value.map((num, i) => (
+        <Fragment key={i}>
+          <input
+            type="string"
+            value={num}
+            onChange={(e) => {
+              setValue(value.map((old, j) => (j === i ? e.target.value : old)));
+            }}
+          />
+          {i !== value.length - 1 ? separator : null}
+        </Fragment>
+      ))}
+      {endLabel}
     </fieldset>
   );
 }
