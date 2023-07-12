@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useState, Fragment } from "react";
 import { z } from "zod";
 import { pointDistance, vectorLength } from "./math";
+import Latex from "./components/Latex";
 
 const floatRegex = /^-?[0-9]+([.,][0-9]+)?$/;
 const floatTransform = (str: string): number => {
@@ -37,11 +38,12 @@ export default function App() {
     result = pointDistance(startPoint, endPoint);
   }
 
-  console.log(vectorStr, vector);
-
   return (
     <div className="flex justify-center p-2">
       <main className="w-[65ch]">
+        <h1 className="text-3xl font-bold mb-3">
+          Калькулятор для обрахунку довжини вектора (модуля вектора)
+        </h1>
         <Select
           label="Розмірність вектора:"
           id="dimensions"
@@ -80,6 +82,9 @@ export default function App() {
               setShowResult(false);
               setVectorStr(newValue);
             }}
+            startLabel={<Latex className="inline" text="\vec{a} = \{" />}
+            separator={<Latex className="inline" text=";\ " />}
+            endLabel={<Latex className="inline" text="\}" />}
           />
         )}
         {mode === "points" && (
@@ -90,6 +95,9 @@ export default function App() {
                 setShowResult(false);
                 setStartPointStr(newValue);
               }}
+              startLabel={<Latex className="inline" text="A = (" />}
+              separator={<Latex className="inline" text=";\ " />}
+              endLabel={<Latex className="inline" text=")" />}
             />
             <VectorInput
               value={endPointStr}
@@ -97,13 +105,38 @@ export default function App() {
                 setShowResult(false);
                 setEndPointStr(newValue);
               }}
+              startLabel={<Latex className="inline" text="B = (" />}
+              separator={<Latex className="inline" text=";\ " />}
+              endLabel={<Latex className="inline" text=")" />}
             />
           </>
         )}
-        <button onClick={() => setShowResult(true)}>Порахувати</button>
+        <button
+          className="mb-2 p-2 bg-gray-200 hover:bg-gray-300 transition-colors rounded"
+          onClick={() => setShowResult(true)}
+        >
+          Порахувати
+        </button>
         <br />
-        {showResult && result !== undefined && <>{result}</>}
-        {showResult && result === undefined && <>invalid data</>}
+        {!showResult && <Latex text={`|\\vec{a}| =`} />}
+        {showResult && result !== undefined && (
+          <Latex text={`|\\vec{a}| = ${result}`} />
+        )}
+        {showResult && result === undefined && <>Невірні вхідні дані</>}
+
+        <h2 className="text-2xl my-2">Теорія</h2>
+        <p>
+          Модуль вектора (довжина вектора){" "}
+          <Latex className="inline" text="|\vec{a}|" /> в прямокутних декартових
+          координатах дорівнює квадратному кореню з суми квадратів його
+          координат.
+        </p>
+        <p>
+          Наприклад для вектора{" "}
+          <Latex className="inline" text="\vec{a} = \{a_x; a_y; a_z\}" />{" "}
+          довжина вектора обраховується наступним чином:
+        </p>
+        <Latex text="|\vec{a}| = \sqrt{a_x^2 + a_y^2 + a_z^2}" blockMode />
       </main>
     </div>
   );
@@ -123,7 +156,7 @@ function Select({
   onChange?: React.ChangeEventHandler<HTMLSelectElement>;
 }) {
   return (
-    <fieldset>
+    <fieldset className="mb-2">
       <label htmlFor={id}>{label}</label>
       <select
         id={id}
@@ -155,12 +188,13 @@ function VectorInput({
   separator?: ReactNode;
 }) {
   return (
-    <fieldset>
+    <fieldset className="mb-2">
       {startLabel}
       {value.map((num, i) => (
         <Fragment key={i}>
           <input
             type="string"
+            className="w-10 border-2 border-gray-200 rounded"
             value={num}
             onChange={(e) => {
               setValue(value.map((old, j) => (j === i ? e.target.value : old)));
