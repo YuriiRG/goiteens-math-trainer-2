@@ -63,7 +63,13 @@ export default function App() {
           ]}
         />
         <Select
-          label="Форма представлення вектора:"
+          label={
+            <>
+              Форма представлення вектора{" "}
+              <Latex className="inline" text="\vec{a}" />
+              {""}:
+            </>
+          }
           id="mode"
           value={mode}
           onChange={(e) => {
@@ -75,6 +81,7 @@ export default function App() {
             { value: "points", text: "Точками" },
           ]}
         />
+        <p className="mb-1">Введіть значення вектора:</p>
         {mode === "coords" && (
           <VectorInput
             value={vectorStr}
@@ -89,6 +96,7 @@ export default function App() {
         )}
         {mode === "points" && (
           <>
+            <p className="mb-1">Початкова точка</p>
             <VectorInput
               value={startPointStr}
               setValue={(newValue) => {
@@ -96,9 +104,10 @@ export default function App() {
                 setStartPointStr(newValue);
               }}
               startLabel={<Latex className="inline" text="A = (" />}
-              separator={<Latex className="inline" text=";\ " />}
+              separator={<Latex className="inline" text=",\ " />}
               endLabel={<Latex className="inline" text=")" />}
             />
+            <p className="mb-1">Кінцева точка</p>
             <VectorInput
               value={endPointStr}
               setValue={(newValue) => {
@@ -106,7 +115,7 @@ export default function App() {
                 setEndPointStr(newValue);
               }}
               startLabel={<Latex className="inline" text="B = (" />}
-              separator={<Latex className="inline" text=";\ " />}
+              separator={<Latex className="inline" text=",\ " />}
               endLabel={<Latex className="inline" text=")" />}
             />
           </>
@@ -120,7 +129,11 @@ export default function App() {
         <br />
         {!showResult && <Latex text={`|\\vec{a}| =`} />}
         {showResult && result !== undefined && (
-          <Latex text={`|\\vec{a}| = ${result}`} />
+          <Latex
+            text={`|\\vec{a}| ${
+              Number.isInteger(result) ? "=" : "\\approx"
+            } ${result}`}
+          />
         )}
         {showResult && result === undefined && <>Невірні вхідні дані</>}
 
@@ -157,12 +170,14 @@ function Select({
 }) {
   return (
     <fieldset className="mb-2">
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id} className="mr-2">
+        {label}
+      </label>
       <select
         id={id}
         value={value}
         onChange={onChange}
-        className="ml-2 p-1 rounded bg-gray-200 align-baseline"
+        className="p-1 rounded bg-gray-200 align-baseline"
       >
         {options.map(({ value, text }) => (
           <option key={value} value={value} className="">
