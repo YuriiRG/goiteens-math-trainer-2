@@ -137,7 +137,7 @@ export default function App() {
         )}
         {showResult && result === undefined && <>Невірні вхідні дані</>}
 
-        <h2 className="text-2xl my-2">Теорія</h2>
+        <h2 className="text-2xl mt-2">Теорія</h2>
         <p>
           Модуль вектора (довжина вектора){" "}
           <Latex className="inline" text="|\vec{a}|" /> в прямокутних декартових
